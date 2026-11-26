@@ -46,7 +46,7 @@
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
-html, body { height: 100%; }
+html, body { height: 100%; overflow: hidden; overscroll-behavior: none; }
 body {
   margin: 0; background: var(--ground); color: var(--ink);
   font: 500 15px/1.45 var(--f-body); overflow: hidden;
@@ -55,7 +55,7 @@ body {
 button { font: inherit; color: inherit; cursor: pointer; }
 button:focus-visible, [tabindex]:focus-visible { outline: 2px solid var(--amber); outline-offset: 2px; }
 
-#app { display: flex; height: 100%; width: 100%; position: relative; }
+#app { display: flex; height: 100%; width: 100%; position: relative; overflow: hidden; }
 #stage { position: relative; flex: 1 1 auto; min-width: 0; height: 100%; overflow: hidden; background: radial-gradient(120% 90% at 50% 40%, #14203a 0%, #060a14 70%); }
 #gl { position: absolute; inset: 0; width: 100%; height: 100%; display: block; touch-action: none; cursor: crosshair; outline: none; }
 #shade { position: absolute; inset: 0; pointer-events: none;
@@ -138,7 +138,8 @@ kbd { font: 500 12px/1 var(--f-mono); padding: 3px 6px; border-radius: 5px; back
 
 /* ---------- Panel derecho ---------- */
 #panel { flex: 0 0 var(--panel-w); width: var(--panel-w); height: 100%; background: linear-gradient(#0f1628, #0a101e); border-left: 1px solid var(--line);
-  display: flex; flex-direction: column; overflow: hidden; transition: flex-basis .28s ease, width .28s ease, transform .28s ease; position: relative; z-index: 12; }
+  display: flex; flex-direction: column; overflow: hidden; transition: flex-basis .28s ease, width .28s ease, transform .28s ease, visibility 0s linear .28s; position: relative; z-index: 12; }
+#app:not(.collapsed) #panel { transition-delay: 0s, 0s, 0s, 0s; }
 #app.collapsed #panel { flex-basis: 0; width: 0; border-left-width: 0; }
 .p-in { width: var(--panel-w); height: 100%; display: flex; flex-direction: column; min-height: 0; padding-right: max(0px, env(safe-area-inset-right, 0px)); }
 .p-head { display: flex; align-items: center; gap: 10px; padding: 16px 14px 12px 18px; border-bottom: 1px solid var(--line); }
@@ -218,7 +219,7 @@ ul.rules { margin: 0; padding-left: 18px; color: #cfd8df; font-size: 14px; displ
   #toolbar { gap: 8px; padding: 7px; }
   #panel { position: absolute; right: 0; top: 0; flex: none; width: min(92vw, var(--panel-w)); box-shadow: -20px 0 50px rgba(0,0,0,.6); }
   .p-in { width: min(92vw, var(--panel-w)); }
-  #app.collapsed #panel { width: min(92vw, var(--panel-w)); transform: translateX(105%); flex-basis: auto; border-left-width: 1px; }
+  #app.collapsed #panel { width: min(92vw, var(--panel-w)); transform: translateX(105%); flex-basis: auto; border-left-width: 1px; visibility: hidden; }
   #hud { gap: 6px; top: 10px; } .lcd { min-width: 78px; padding: 5px 10px 3px; } .lcd output { font-size: 32px; } #face { width: 54px; }
   #panelTab { top: auto; bottom: calc(max(16px, env(safe-area-inset-bottom, 0px)) + 74px); right: 12px; }
   #levelChip { top: auto; bottom: calc(max(16px, env(safe-area-inset-bottom, 0px)) + 74px); left: 12px; }
@@ -365,6 +366,8 @@ ul.rules { margin: 0; padding-left: 18px; color: #cfd8df; font-size: 14px; displ
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>window.THREE||document.write('<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"><\/script>')</script>
+<script>window.addEventListener('error',function(e){var l=document.getElementById('loader');if(l&&!l.classList.contains('off')&&!window.__msReady){var d=l.firstElementChild;if(d)d.innerHTML='No se pudo cargar el juego.<br><small>Revisa tu conexión y recarga la página.</small>';}});</script>
 <script>
 /* ===== Lógica pura de KABUMBA (sin DOM) ===== */
 function mulberry32(a) {
@@ -680,9 +683,9 @@ const flash = new THREE.PointLight(0xff9a3c, 0, 18, 2); flash.position.set(0, 2,
   bar(-38, 12, 10, 3, 18, 40, 0x9db4ff, 5);
   bar(36, 10, -8, 3, 16, 40, 0xff9ee8, 4.5);
   bar(-8, 26, 22, 4, 1, 60, 0x7affd8, 5);
-  const pm = new THREE.PMREMGenerator(renderer);
+  try { const pm = new THREE.PMREMGenerator(renderer);
   scene.environment = pm.fromScene(es, 0.03).texture;
-  pm.dispose();
+  pm.dispose(); } catch (e) { console.warn('env map', e); }
 })();
 
 /* =====================================================================
@@ -1673,7 +1676,7 @@ function boot() {
   window.__ms = { get game() { return game; }, act, cells: () => cells, setLevel, LEVELS, Game, startTutorial, newGame, TUT, setPanel, doHint, scene, camera, renderer, get tut() { return tut; }, crackAround, collapse, shatter };
 }
 const fontsReady = (document.fonts && document.fonts.load) ? Promise.race([document.fonts.load('900 100px "Big Shoulders Display"'), new Promise(r => setTimeout(r, 1800))]) : Promise.resolve();
-fontsReady.then(boot, boot);
+fontsReady.then(boot, boot); window.__msReady = true;
 })();
 </script>
 
